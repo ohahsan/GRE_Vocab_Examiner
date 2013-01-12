@@ -14,18 +14,21 @@ public class Examiner {
 	
 	/**
 	 * List of words and their definitions.
+	 * 
 	 */
 	
 	private List<String> words;
 	
 	/**
 	 * Current definition being displayed.
+	 * 
 	 */
 	
 	private String currentDefinition;
 	
 	/**
 	 * Word that matches the current definition.
+	 * 
 	 */
 	
 	private String currentWord;
@@ -34,6 +37,7 @@ public class Examiner {
 	 * The constructor initializes the words instance variable.
 	 * 
 	 * @param words
+	 * 
 	 */
 	
 	public Examiner(ArrayList<String> words) {
@@ -44,6 +48,7 @@ public class Examiner {
 	 * This method gives a definition as a question.
 	 * 
 	 * @return
+	 * 
 	 */
 	
 	public String getDefinition() {
@@ -59,6 +64,7 @@ public class Examiner {
 	 * 
 	 * @param answer
 	 * @return
+	 * 
 	 */
 	
 	public boolean verify(String answer) {
@@ -70,6 +76,7 @@ public class Examiner {
 	 * Returns true if the game is over (no words remain).
 	 * 
 	 * @return
+	 * 
 	 */
 	
 	public boolean isEmpty() {
@@ -80,6 +87,7 @@ public class Examiner {
 	 * Getter for the current definition.
 	 * 
 	 * @return
+	 * 
 	 */
 
 	public String getCurrentDefinition() {
@@ -90,6 +98,7 @@ public class Examiner {
 	 * Setter for the current definition (should never be called).
 	 * 
 	 * @param currentDefinition
+	 * 
 	 */
 
 	public void setCurrentDefinition(String currentDefinition) {
@@ -100,6 +109,7 @@ public class Examiner {
 	 * Getter for the current word.
 	 * 
 	 * @return
+	 * 
 	 */
 
 	public String getCurrentWord() {
@@ -110,6 +120,7 @@ public class Examiner {
 	 * Setter for the current word (should never be called).
 	 * 
 	 * @param currentWord
+	 * 
 	 */
 
 	public void setCurrentWord(String currentWord) {

@@ -1,6 +1,11 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Scanner;
 
 /**
@@ -12,62 +17,43 @@ import java.util.Scanner;
 
 public class Driver {
 	
-	static final ArrayList<String> words = new ArrayList<String>(Arrays.asList(
-			"ABATE>>To lessen in intensity or degree",
-			"ABERRANT>>Deviating from the norm",
-			"ABJURE>>To renounce or reject solemnly",
-			"ABROGATE>>To repeal or revoke",
-			"ABSTEMIOUS>>Eating or drinking in moderation",
-			"ACCOLADE>>An expression of praise",
-			"ACERBIC>>Having a sour or bitter taste or character",
-			"ACUMEN>>Quick, keen, or accurate knowledge or insight",
-			"ADMONISH>>To reprove; to express warning or disapproval",
-			"ADROIT>>Adept; dexterous",
-			"ADULATION>>Excessive praise; intense adoration",
-			"ADULTERATE>>To reduce purity by combining with inferior ingredients",
-			"AESTHETIC>>Dealing with, appreciative of, or responsive to art or beauty",
-			"AGGRANDIZE>>To increase in intensity, power, or prestige",
-			"ALACRICITY>>Eager and enthusiastic willingness",
-			"ALCHEMY>>A medieval science aimed at the transmutation of metals, especially base metals, into gold",
-			"AMALGAMATE>>To combine several elements into a whole",
-			"AMENABLE>>Agreeable; responsive to suggestion",
-			"ANACHRONISTIC>>Out of place in terms of historical or chronological context",
-			"ANATHEMAL>>A solemn or religious curse; a cursed or thoroughly loathed person or thing",
-			"ANOMALY>>Deviation from the normal order, form, or rule; abnormality",
-			"ANTITHETICAL>>Diametrically opposed; as in antithesis",
-			"ANTIPATHY>>Aversion; dislike",
-			"APOCRYPHAL>>Of dubious authenticity or origin; spurious",
-			"APOGEE>>Farthest or highest point; culmination; zenith",
-			"APOSTATE>>One who abandons long-held religious or political convictions",
-			"APOTHEOSIS>>Deification; supreme example",
-			"APPOSITE>>Appropriate; pertinent; relevant",
-			"APPRISE>>To give notice to; to inform",
-			"APPROBATION>>An expression of approval or praise",
-			"ARABESQUE>>A complex, ornate design; also a dance position",
-			"ARCANE>>Mysterious; esoteric",
-			"ARCHAIC>>Outdated; associated with an earlier, perhaps more primitive time",
-			"ARTLESS>>Completely without guile; unsophisticated",
-			"ASCETIC>>Someone practicing self-denial",
-			"ASPERTION>>An act of defamation or maligning",
-			"ASSAY>>To put to a test",
-			"ASSIDUOUS>>Diligent; hard-working",
-			"ASSUAGE>>To ease or lessen; to appease or pacify",
-			"ASTRINGENT>>Biting; severe"
-			));
+	/**
+	 * The list of vocabulary words.
+	 * 
+	 */
+	
+	static ArrayList<String> words = new ArrayList<String>();
+	
+	/**
+	 * Scanner for standard input.
+	 * 
+	 */
+	
+	static Scanner reader = new Scanner(System.in);
 	
 	/**
 	 * Main method.
+	 * 
 	 */
 	
 	public static void main(String[] args) {
 		
 		// Game setup.
 		
-		Scanner reader = new Scanner(System.in);
+		initializeWords();
 		System.out.println("There are " + words.size() 
 				+ " words in the system.");
+		filterWords();
+		
+		System.out.println("There are now " + words.size() + " words.");
 		System.out.print("How many words do you want to attempt now? ");
 		int numberOfWords = reader.nextInt();
+		
+		if (numberOfWords < 1 || numberOfWords > words.size()) {
+			System.out.println("Invalid number of words.");
+			System.exit(1);
+		}
+		
 		reader.nextLine(); // Toss out the newline.
 		Collections.shuffle(words);
 		ArrayList<String> modifiedWords = new ArrayList<String>();
@@ -97,9 +83,80 @@ public class Driver {
 		// End of game.
 		
 		double percent = correct * 100.0 / numberOfWords;
+		int percentHat = (int)(percent * 100);
+		percent = percentHat / 100.0;
 		System.out.println("There are no words left. " + correct + "/"
 				+ numberOfWords + " (" + percent + "%) were guessed correctly.");
 		
+		reader.close();
+	}
+	
+	/**
+	 * Initializes the words array list.
+	 * 
+	 */
+	
+	public static void initializeWords() {
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader("words.txt"));
+			String nextLine = reader.readLine();
+			while (nextLine != null) {
+				words.add(nextLine);
+				nextLine = reader.readLine();
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("The words list was not found.");
+		} catch (IOException e) {
+			System.out.println("Error opening file.");
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					System.out.println("File failed to close");
+				}
+			}
+		}
+	}
+	
+	/**
+	 * This method filters the words.
+	 * 
+	 */	
+	
+	public static void filterWords() {
+		System.out.print("Do you want to filter the words? (YES or NO): ");
+		String response = reader.nextLine();
+		
+		if (response.toLowerCase().equals("yes")) {
+			System.out.print("Enter the range of words (example: 30-80): ");
+			String range = reader.nextLine();
+			int beginning = Integer.valueOf(range.substring(0, range.indexOf("-")));
+			int end = Integer.valueOf(range.substring(range.indexOf("-") + 1));
+			
+			if (beginning < 1 || end > words.size()) {
+				System.out.println("Invalid range.");
+				System.exit(1);
+			}
+			
+			// Mark words for deletion.
+			for (int i = 0; i < words.size(); i++) {
+				if (i < beginning - 1 || i >= end) {
+					words.remove(i);
+					words.add(i, "delete");
+				}
+			}
+			
+			// Delete the words.
+			Iterator<String> wordsIterator = words.iterator();
+			while (wordsIterator.hasNext()) {
+				String temp = wordsIterator.next();
+				if (temp.equals("delete")) {
+					wordsIterator.remove();
+				}
+			}
+		}
 	}
 
 }
