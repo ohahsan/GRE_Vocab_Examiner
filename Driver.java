@@ -18,6 +18,13 @@ import java.util.Scanner;
 public class Driver {
 	
 	/**
+	 * Multiple choice mode. Disabled when less than 10 words are chosen.
+	 * 
+	 */
+	
+	static boolean multipleChoiceMode;
+	
+	/**
 	 * The list of vocabulary words.
 	 * 
 	 */
@@ -32,6 +39,13 @@ public class Driver {
 	static Scanner reader = new Scanner(System.in);
 	
 	/**
+	 * Examiner object that has the game mechanics.
+	 * 
+	 */
+	
+	static Examiner examiner;
+	
+	/**
 	 * Main method.
 	 * 
 	 */
@@ -40,54 +54,62 @@ public class Driver {
 		
 		// Game setup.
 		
-		initializeWords();
-		System.out.println("There are " + words.size() 
-				+ " words in the system.");
-		filterWords();
-		
-		System.out.println("There are now " + words.size() + " words.");
-		System.out.print("How many words do you want to attempt now? ");
-		int numberOfWords = reader.nextInt();
-		
-		if (numberOfWords < 1 || numberOfWords > words.size()) {
-			System.out.println("Invalid number of words.");
-			System.exit(1);
-		}
-		
-		reader.nextLine(); // Toss out the newline.
-		Collections.shuffle(words);
-		ArrayList<String> modifiedWords = new ArrayList<String>();
-		for (int i = 0; i < numberOfWords; i++) {
-			modifiedWords.add(words.get(i));
-		}
-		
-		// Main game code.
-		
-		Examiner examiner = new Examiner(modifiedWords);
-		int correct = 0;
-		while (!examiner.isEmpty()) {
-			String definition = examiner.getDefinition();
-			System.out.println("What word matches this definition?: "
-					+ definition + ".");
-			String guess = reader.nextLine();
+		do {
 			
-			if (examiner.verify(guess)) {
-				System.out.println("Correct.");
-				correct++;
+			initializeWords();
+			System.out.println("There are " + words.size() 
+					+ " words in the system.");
+			filterWords();
+			
+			if (query("Display list of words? (YES or NO): ")) {
+				multipleChoiceMode = false;
+				displayWords();
 			} else {
-				System.out.println("Incorrect. The correct word is: " + 
-						examiner.getCurrentWord() + ".");
+				multipleChoiceMode = 
+						query("Multiple choice mode? (YES or NO): ");
 			}
-		}
-		
-		// End of game.
-		
-		double percent = correct * 100.0 / numberOfWords;
-		int percentHat = (int)(percent * 100);
-		percent = percentHat / 100.0;
-		System.out.println("There are no words left. " + correct + "/"
-				+ numberOfWords + " (" + percent + "%) were guessed correctly.");
-		
+			
+			System.out.println("There are " + words.size() + " words.");
+			System.out.print("Number of words? (Multiple choice will be" +
+					"disabled if this is less than 10): ");
+			int numberOfWords = reader.nextInt();
+			
+			if (numberOfWords < 10 && multipleChoiceMode) {
+				System.out.println("Multiple choice mode has been diabled.");
+				multipleChoiceMode = false;
+			}
+			
+			if (numberOfWords < 1 || numberOfWords > words.size()) {
+				System.out.println("Invalid number of words.");
+				System.exit(1);
+			}
+			
+			reader.nextLine(); // Toss out the newline.
+			Collections.shuffle(words);
+			ArrayList<String> modifiedWords = new ArrayList<String>();
+			for (int i = 0; i < numberOfWords; i++) {
+				modifiedWords.add(words.get(i));
+			}
+			
+			// Main game code.
+			
+			examiner = new Examiner(modifiedWords);
+			int correct = 0;
+			while (!examiner.isEmpty()) {
+				correct += definitionQuestion();
+			}
+			
+			// End of game.
+			
+			// Make a percent rounded to 2 decimal places.
+			double percent = correct * 100.0 / numberOfWords;
+			int percentHat = (int)(percent * 100);
+			percent = percentHat / 100.0;
+			System.out.println("There are no words left. " + correct + "/"
+					+ numberOfWords + " (" + percent 
+					+ "%) were guessed correctly.");
+
+		} while (query("Another round? (YES or NO): "));
 		reader.close();
 	}
 	
@@ -97,6 +119,7 @@ public class Driver {
 	 */
 	
 	public static void initializeWords() {
+		words.clear();
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new FileReader("words.txt"));
@@ -126,13 +149,13 @@ public class Driver {
 	 */	
 	
 	public static void filterWords() {
-		System.out.print("Do you want to filter the words? (YES or NO): ");
-		String response = reader.nextLine();
-		
-		if (response.toLowerCase().equals("yes")) {
+		boolean response = 
+				query("Do you want to filter the words? (YES or NO): ");
+		if (response) {
 			System.out.print("Enter the range of words (example: 30-80): ");
 			String range = reader.nextLine();
-			int beginning = Integer.valueOf(range.substring(0, range.indexOf("-")));
+			int beginning = 
+					Integer.valueOf(range.substring(0, range.indexOf("-")));
 			int end = Integer.valueOf(range.substring(range.indexOf("-") + 1));
 			
 			if (beginning < 1 || end > words.size()) {
@@ -158,5 +181,77 @@ public class Driver {
 			}
 		}
 	}
+	
+	/**
+	 * Gives a standard match definition to word question.
+	 * 
+	 */
 
+	public static int definitionQuestion() {
+		String definition = examiner.getDefinition();
+		System.out.println("Which word matches this definition? "
+				+ definition + ".");
+		if (multipleChoiceMode) {
+			multipleChoice();
+		}
+		String guess = reader.nextLine();
+		
+		if (examiner.verifyDefinition(guess)) {
+			System.out.println("Correct.");
+			return 1;
+		} else {
+			System.out.println("Incorrect. The correct word is " + 
+					examiner.getCurrentWord() + ".");
+			return 0;
+		}
+	}
+	
+	/**
+	 * Prompts a yes/no question.
+	 * 
+	 */
+	
+	public static boolean query(String question) {
+		System.out.print(question);
+		String response = reader.nextLine();
+		return response.toLowerCase().equals("yes");
+	}
+	
+	/**
+	 * Prints out the words.
+	 * 
+	 */
+	
+	public static void displayWords() {
+		Collections.sort(words);
+		for (String current : words) {
+			System.out.println(current.substring(0, current.indexOf(">>")));
+		}
+	}
+	
+	/**
+	 * Displays multiple choices.
+	 * 
+	 */
+	
+	public static void multipleChoice() {
+		Collections.shuffle(words);
+		ArrayList<String> answers = new ArrayList<String>();
+		for (int i = 0; i < 4; i++) {
+			if (words.get(i).equals(examiner.getCurrentWord())) {
+				String lastWord = words.get(words.size() - 1);
+				answers.add(lastWord.substring(0, lastWord.indexOf(">>")));
+			} else {
+				answers.add(words.get(i).substring(
+						0, words.get(i).indexOf(">>")));
+			}
+		}
+		answers.add(examiner.getCurrentWord());
+		Collections.shuffle(answers);
+		System.out.print("Choices: ");
+		for (String word : answers) {
+			System.out.print(word + " ");
+		}
+		System.out.println();
+	}
 }

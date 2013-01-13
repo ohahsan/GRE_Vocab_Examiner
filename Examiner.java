@@ -67,7 +67,7 @@ public class Examiner {
 	 * 
 	 */
 	
-	public boolean verify(String answer) {
+	public boolean verifyDefinition(String answer) {
 		answer = answer.toLowerCase();
 		return answer.equals(currentWord.toLowerCase());
 	}
